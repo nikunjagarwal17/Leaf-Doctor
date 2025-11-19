@@ -1,0 +1,33 @@
+# Bytecode / cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+!.env.sample
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Model + data artifacts
+*.pt
+*.pth
+*.onnx
+static/uploads/
+!static/uploads/.gitkeep
+
+# Logs
+*.log
+
+# Temparory + Notes files
+temp_*.md
+*.pem
