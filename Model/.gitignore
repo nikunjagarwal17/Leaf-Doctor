@@ -1,0 +1,7 @@
+
+# Temparory + Notes files
+temp_*.md
+
+# Models
+*.pt
+
