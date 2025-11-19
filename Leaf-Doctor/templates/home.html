@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block pagetitle %}Plant Copilot{% endblock pagetitle %}
+{% block body %}
+<section class="hero-card">
+    <div>
+        <p class="eyebrow">Leaf Doctor</p>
+        <h1>Chatbot assistant for plant disease diagnosis and care</h1>
+        <p class="lead">
+            Hello, please upload a leaf image to know about the plant disease. I will identify the issue,
+            summarize the symptoms, recommend fertilizers and pesticides, and let you ask any follow-up
+            questions via a free agronomy advisor API.
+        </p>
+        <ul class="hero-highlights">
+            <li>39 crop diseases covered by the onboard CNN model</li>
+            <li>Instant prevention checklist tailored to the diagnosis</li>
+            <li>Advisor chats to learn treatments, supplies, and controls</li>
+        </ul>
+        <div class="hero-links">
+            <a class="secondary-link" href="{{ url_for('learn_page') }}">View supported diseases</a>
+        </div>
+    </div>
+    <div class="hero-cta">
+        <div class="hero-badge">Beta</div>
+        <p class="hero-cta-text">Upload a close-up photo of the affected leaf to begin.</p>
+        <button class="primary" id="uploadButton" type="button">Choose leaf image</button>
+        <p class="muted">Accepted formats: JPG, PNG. Max 10MB.</p>
+    </div>
+</section>
+
+<section class="chat-layout">
+    <div class="chat-panel">
+        <header class="chat-header">
+            <div>
+                <p class="eyebrow">Conversation</p>
+                <h2>Plant Care Copilot</h2>
+            </div>
+            <span class="status-dot online">Online</span>
+        </header>
+        <div class="chat-stream" id="chatStream" aria-live="polite"></div>
+        <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+            <input type="file" name="image" id="imageInput" accept="image/*" hidden />
+            <div class="file-pill" id="filePill">
+                <span class="file-pill__label">No file selected</span>
+                <button type="button" class="link" id="changeFileBtn">Browse</button>
+            </div>
+            <button type="submit" class="primary">Predict disease</button>
+        </form>
+        <form id="adviceForm" class="advice-form hidden">
+            <label for="promptField">Ask about this disease</label>
+            <textarea id="promptField" name="prompt" rows="3" placeholder="e.g. What cultural practices reduce spread?"></textarea>
+            <div class="advice-actions">
+                <button type="submit" class="primary" id="askAdvisorBtn">Ask advisor</button>
+                <button type="button" class="secondary" id="supplementBtn">Get supplement suggestion</button>
+            </div>
+            <p class="muted api-hint">Use the advisor to dig deeper into treatments, fertilizers, pesticides, and control tips.</p>
+        </form>
+    </div>
+    <aside class="side-panel">
+        <h3>How it works</h3>
+        <ol>
+            <li>Upload a clear photo of the symptomatic leaf.</li>
+            <li>The CNN model predicts the disease locally.</li>
+            <li>Plant Copilot shares treatments, supplements, and lets you chat for more help.</li>
+        </ol>
+        <h3>Why a chatbot?</h3>
+        <p>
+            This platform is built to give farmers practical, contextual advice right after a diagnosis. The conversational AI keeps everything in one place—no need to juggle PDFs, WhatsApp chats, or agronomist calls.
+        </p>
+        <div class="key-card">
+            <p class="eyebrow">Advisor Feature</p>
+            <p>
+                After a prediction, open the chat to ask follow-up questions or tap “Get supplement suggestion” to receive curated fertilizer and pesticide guidance.
+            </p>
+        </div>
+    </aside>
+</section>
+{% endblock body %}

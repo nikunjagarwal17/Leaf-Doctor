@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block pagetitle %}Learn More{% endblock pagetitle %}
+{% block body %}
+<section class="learn-hero">
+    <div>
+        <p class="eyebrow">Explore the coverage</p>
+        <h1>All supported plant diseases at a glance</h1>
+        <p>
+            The onboard CNN can currently recognize {{ total }} crop diseases across fruits, vegetables, and ornamentals.
+            Browse the knowledge base below to understand symptoms, prevention habits, and advisor-ready prompts.
+        </p>
+        <div class="hero-links">
+            <a class="secondary-link" href="{{ url_for('home_page') }}" rel="noreferrer">Return to chatbot</a>
+            <a class="secondary-link" href="https://huggingface.co/HuggingFaceH4/zephyr-7b-beta" target="_blank" rel="noreferrer">Advisor model info</a>
+            <a class="secondary-link" href="https://data.mendeley.com/datasets/tywbtsjrjv/1" target="_blank" rel="noreferrer">DataSet Used</a>
+        </div>
+    </div>
+    <div class="learn-hero-card">
+        <p class="eyebrow">Why this page?</p>
+        <p>
+            This section lets farmers quickly check which crops are supported before they rely on the AI assistant.
+            The crop gallery sets clear expectations and doubles as a simple study guide for field scouts.
+        </p>
+        <p class="muted">Read any disease card to craft better advisor prompts.</p>    </div>
+</section>
+
+<section class="disease-grid" aria-label="Diseases catalog">
+    {% for disease in diseases %}
+    <article class="disease-card">
+        <h3>{{ disease.name }}</h3>
+        <p>{{ disease.summary }}</p>
+        {% if disease.steps %}
+        <ul>
+            {% for step in disease.steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </article>
+    {% endfor %}
+</section>
+
+<section class="team-section" id="team">
+    <div>
+        <p class="eyebrow">Built by</p>
+        <h2>The Leaf Doctor makers</h2>
+        <p>
+            Two friends teamed up to blend agronomy intuition with production-ready AI. Connect with us below for collaborations,
+            dataset contributions, or deployment support.
+        </p>
+    </div>
+    <div class="team-grid">
+        {% for maker in builders %}
+        <div class="team-card">
+            <h3>{{ maker.name }}</h3>
+            <p class="muted">{{ maker.role }}</p>
+            <a href="{{ maker.linkedin }}" target="_blank" rel="noreferrer">LinkedIn profile ↗</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock body %}
+

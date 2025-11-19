@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Leaf Doctor | {% block pagetitle %}{% endblock pagetitle %}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}" />
+    </head>
+    <body class="app-shell">
+        <header class="site-header">
+            <a href="{{ url_for('home_page') }}" class="brand">Leaf Doctor</a>
+            {% set current_path = request.path %}
+            <nav>
+                <a href="{{ url_for('home_page') }}" class="{% if current_path == url_for('home_page') %}active{% endif %}">Chatbot</a>
+                <a href="{{ url_for('learn_page') }}" class="{% if current_path == url_for('learn_page') %}active{% endif %}">Learn more</a>
+                <a href="https://github.com/nikunjagarwal17/Leaf-Doctor" target="_blank" rel="noreferrer">GitHub</a>
+            </nav>
+        </header>
+        <main class="app-content">
+            {% block body %}{% endblock body %}
+        </main>
+        <script type="module" src="{{ url_for('static', filename='chat.js') }}"></script>
+    </body>
+</html>
