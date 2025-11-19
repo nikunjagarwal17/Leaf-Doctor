@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  leaf-doctor:
+    build: .
+    container_name: leaf-doctor
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./static/uploads:/app/static/uploads
+
