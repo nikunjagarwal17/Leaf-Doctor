@@ -21,5 +21,5 @@ ENV FLASK_APP=app.py \
 
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "120", "--workers", "1", "--threads", "2", "--worker-class", "gthread", "app:app"]
 
