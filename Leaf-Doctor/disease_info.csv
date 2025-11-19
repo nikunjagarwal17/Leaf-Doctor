@@ -1,0 +1,156 @@
+index,disease_name,description,Possible Steps
+0,Apple : Scab,"Fungal disease that causes olive‑brown spots on apple leaves and fruits. Heavy infection leads to yellow leaves, early leaf drop, and rough, cracked fruit.","Plant scab‑resistant apple varieties.
+Remove and destroy fallen leaves every autumn.
+Avoid overhead watering; keep leaves as dry as possible.
+Use labeled fungicide (for example copper or sulfur) in early spring if disease is common in your area."
+1,Apple : Black Rot,"Fungus that causes brown leaf spots, sunken dark lesions on fruit, and cankers on branches. Fruit may shrivel and turn into black ""mummies"".","Prune and remove all cankered branches and mummified fruit.
+Clean up fallen fruit and leaves.
+Prune in late winter and keep the canopy open for airflow.
+Use a labeled fungicide if the disease is severe."
+2,Apple : Cedar rust,"Fungal disease that needs both juniper and apple to survive. Causes yellow‑orange leaf spots on apples and can affect fruit quality.","Choose rust‑resistant apple varieties when possible.
+Remove visible galls from nearby juniper/cedar trees.
+Rake and remove fallen apple leaves.
+Use a labeled rust fungicide in spring from bud break through petal fall if disease is common."
+3,Apple : Healthy,"Tree has green leaves, strong branches, and clean fruit. Grows best in full sun and well‑drained soil.","Plant in full sun with well‑drained soil.
+Water regularly but avoid water‑logging.
+Prune each year to remove dead or crossing branches.
+Thin small fruits so remaining apples grow larger and healthier."
+4,Background Without Leaves,"No plant leaf is detected in the image.","Upload a clear photo where the leaf fills most of the frame.
+Make sure the leaf is in focus and well lit.
+Avoid busy backgrounds and strong shadows."
+5,Blueberry : Healthy,"Plant has dark green leaves and firm, colorful berries. Blueberries like acidic, moist but well‑drained soil.","Grow in full sun in acidic soil (low pH).
+Mulch with pine needles or bark to keep roots cool and moist.
+Water regularly, especially during flowering and fruiting.
+Protect ripening berries from birds with netting if needed."
+6,Cherry : Powdery Mildew,"Fungus that looks like white powder on leaves, shoots, and sometimes fruit. Leaves may curl, twist, and turn yellow.","Prune to open the tree for better air flow.
+Remove and throw away heavily infected leaves and shoots.
+Avoid overhead watering.
+Use a labeled fungicide (such as sulfur or myclobutanil) at first sign of disease."
+7,Cherry : Healthy,"Tree has glossy green leaves and plenty of blossoms and fruit. Needs full sun and well‑drained soil.","Water deeply during dry spells.
+Mulch around the base to keep soil moist (not touching trunk).
+Prune in late winter to remove dead or crossing branches.
+Use bird netting if birds are eating the fruit."
+8,Corn : Cercospora Leaf Spot | Gray Leaf Spot,"Fungal disease that makes long, rectangular gray or tan spots on corn leaves. Severe infection can kill leaves and reduce yield.","Plant hybrids with good gray leaf spot resistance.
+Rotate corn with other crops and remove old corn residue.
+Avoid very dense planting to improve air flow.
+Use a labeled fungicide if disease appears early and weather is warm and humid."
+9,Corn : Common Rust,"Fungal disease that causes many small, raised, rusty‑brown pustules on both sides of leaves.","Choose rust‑resistant hybrids where possible.
+Monitor fields, especially in cool, moist weather.
+Use a labeled fungicide if rust is heavy before tasseling.
+Keep plants healthy with balanced fertilizer and weed control."
+10,Corn : Northern Leaf Blight,"Causes long, cigar‑shaped gray or tan lesions on leaves. Heavy blight can kill leaves and reduce grain fill.","Plant hybrids rated resistant to northern leaf blight.
+Rotate with non‑corn crops and manage crop residue.
+Scout fields regularly; treat with a labeled fungicide if lesions reach the ear leaf before grain fill.
+Avoid excessive nitrogen that causes very dense foliage."
+11,Corn : Healthy,"Plants have upright green leaves, strong stalks, and well‑filled ears. Corn grows best in warm weather and full sun.","Plant in full sun after soil has warmed.
+Space plants and rows so air can move between them.
+Water deeply during tasseling and ear fill.
+Keep weeds down and use balanced fertilizer for steady growth."
+12,Grape : Black Rot,"Fungal disease that causes brown leaf spots and shriveled, black ""mummy"" berries. Can destroy most of the crop in warm, wet weather.","Remove and destroy all mummified berries and infected shoots.
+Prune vines to open the canopy and improve drying.
+Clean up fallen leaves and old fruit each year.
+Use a labeled grape fungicide from early shoot growth through fruit sizing if disease is common."
+13,Grape : Esca | Black Measles,"Trunk disease that causes striped leaves, dark spots on berries, and gradual vine decline. There is no complete cure.","Cut out and destroy infected wood and clusters where possible.
+Protect large pruning wounds with pruning seal or labeled protectant.
+Avoid stressing vines; provide good irrigation and nutrition.
+Remove and replace vines that are badly affected."
+14,Grape : Leaf Blight | Isariopsis Leaf Spot,"Fungus that creates yellow‑brown spots on leaves and can infect shoots and young berries, leading to leaf drop.","Prune vines to keep the canopy open and dry.
+Remove infected leaves and plant debris.
+Avoid wetting foliage; use drip irrigation.
+Apply a labeled fungicide during periods of warm, humid weather if disease appears."
+15,Grape : Healthy,"Vine has strong shoots, healthy green leaves, and full clusters of grapes.","Plant in full sun with well‑drained soil.
+Train vines on a trellis and prune every winter.
+Water at the base of the plant; keep leaves as dry as possible.
+Monitor for common grape diseases and treat early if needed."
+16,Orange : Haunglongbing | Citrus Greening,"Serious bacterial disease spread by tiny psyllid insects. Causes yellow mottled leaves, small lopsided bitter fruit, and gradual tree decline. There is no cure.","Buy and plant only certified disease‑free citrus trees.
+Control Asian citrus psyllids with recommended insecticides and oil sprays.
+Remove and destroy trees that test positive or show strong symptoms.
+Report suspected cases to local agriculture authorities where required."
+17,Peach : Bacterial Spot,"Bacterial disease that causes small dark leaf spots, yellow leaves, and rough, sunken spots on fruit. Severe cases lead to early leaf drop.","Plant tolerant varieties when available.
+Avoid overhead watering and handling wet trees.
+Prune for good air flow and remove badly infected twigs.
+Use copper or other labeled bactericides during wet, warm periods if needed."
+18,Peach : Healthy,"Tree has lush green leaves, strong new shoots, and clean, well‑colored fruit.","Plant in full sun with well‑drained soil.
+Prune every winter to keep an open center and remove old wood.
+Water regularly during fruit development.
+Thin extra fruit so remaining peaches grow larger and healthier."
+19,Pepper bell : Bacterial Spot,"Bacterial disease that causes small water‑soaked spots on leaves and raised rough spots on fruit. Severe infection leads to leaf drop and sun‑scalded peppers.","Start with disease‑free, treated seed or healthy transplants.
+Avoid overhead irrigation and working with wet plants.
+Mulch to reduce soil splash onto leaves.
+Remove badly infected plants and use copper or other labeled bactericides if needed."
+20,Pepper bell : Healthy,"Plant has dark green leaves, sturdy stems, and smooth, firm peppers.","Plant after soil warms in a sunny spot.
+Water regularly so soil stays evenly moist, not soggy.
+Use mulch to hold moisture and prevent weeds.
+Support plants with stakes or cages if fruits are heavy."
+21,Potato : Early Blight,"Fungal disease that causes brown target‑like spots with rings on lower leaves. Leaves yellow, dry up, and die from the bottom up.","Plant resistant varieties and use healthy seed potatoes.
+Avoid overhead watering; water at soil level.
+Provide good spacing and airflow between plants.
+Use a labeled fungicide if disease pressure is high."
+22,Potato : Late Blight,"Very destructive disease that causes water‑soaked spots that quickly turn dark brown/black on leaves and stems. Tubers may rot in the field and storage.","Plant certified disease‑free seed and destroy volunteer potatoes.
+Hill soil well to protect tubers.
+Remove and destroy infected plants immediately.
+Use recommended protectant and systemic fungicides during cool, wet periods if late blight is present in your region."
+23,Potato : Healthy,"Plants have full green foliage and produce firm, well‑shaped tubers underground.","Plant certified seed pieces in loose, well‑drained soil.
+Hill soil around stems as plants grow to cover developing tubers.
+Water regularly during tuber bulking but avoid soggy soil.
+Rotate where you grow potatoes every year to reduce disease."
+24,Raspberry : Healthy,"Canes are strong, leaves are green, and plants produce many berries.","Plant in full sun with well‑drained soil.
+Water regularly during flowering and fruiting.
+Prune out old, dead canes each year.
+Support rows with wires or stakes for easy harvest."
+25,Soybean : Healthy,"Plants have dark green trifoliate leaves and well‑filled pods.","Plant in warm soil with good drainage.
+Control weeds early so plants are not shaded.
+Ensure enough moisture during flowering and pod fill.
+Rotate crops yearly to keep soil healthy."
+26,Squash : Powdery Mildew,"Fungal disease that looks like white powder on leaves and stems. Infected leaves yellow, dry, and die early, reducing fruit size.","Space plants well and remove crowded leaves for better air flow.
+Avoid overhead watering; water at the base of plants.
+Remove and discard heavily infected leaves.
+Use sulfur, potassium bicarbonate, or other labeled fungicides at first sign of disease."
+27,Strawberry : Leaf Scorch,"Fungal disease that causes many small dark purple spots that merge, turning leaves red‑brown and scorched at the edges.","Remove and destroy infected leaves and plant debris.
+Keep plants well spaced and weed‑free for better air flow.
+Water at soil level and avoid wetting the foliage.
+Renovate or replant old, badly infected beds with clean plants."
+28,Strawberry : Healthy,"Plants have bright green leaves and produce many firm, red berries.","Plant in full sun in well‑drained soil or containers.
+Water regularly, keeping soil moist but not waterlogged.
+Mulch around plants to keep fruit clean and reduce weeds.
+Remove old leaves after harvest and replace beds every few years."
+29,Tomato : Bacterial Spot,"Bacterial disease that causes small dark leaf spots and rough, scabby spots on fruit. Severe infections defoliate plants and ruin fruit quality.","Use disease‑free seed and healthy transplants.
+Avoid overhead watering and touching plants when wet.
+Mulch soil to prevent splash onto leaves.
+Sanitize tools and use copper or other labeled bactericides when conditions are warm and wet."
+30,Tomato : Early Blight,"Fungal disease that causes brown target‑like spots with rings on older leaves. Leaves yellow and drop, starting at the bottom of the plant.","Stake or cage plants and remove lower leaves to improve air flow.
+Mulch soil to reduce splash of spores.
+Water at the base of plants; keep foliage dry.
+Use labeled fungicides (such as chlorothalonil or copper) when disease appears or rainy weather is forecast."
+31,Tomato : Late Blight,"Very aggressive disease that causes large, water‑soaked brown patches on leaves and dark lesions on stems and fruit. Plants can collapse quickly in cool, wet weather.","Check plants often during cool, wet periods.
+Remove and destroy infected plants and nearby volunteers immediately.
+Avoid overhead irrigation and crowded plantings.
+Apply labeled protectant and systemic fungicides on a tight schedule when late blight is reported in your area."
+32,Tomato : Leaf Mold,"Fungal disease favored by high humidity, usually in greenhouses or tunnels. Causes yellow patches on top of leaves and olive‑green mold on the undersides.","Improve ventilation and reduce humidity in tunnels or greenhouses.
+Water at soil level and avoid wetting leaves.
+Remove infected leaves promptly.
+Use labeled fungicides, making sure to spray undersides of leaves."
+33,Tomato : Septoria Leaf Spot,"Fungal disease that causes many small round spots with dark edges and light centers on lower leaves. Leaves turn yellow and drop.","Remove infected lower leaves as soon as spots appear.
+Stake or cage plants and mulch the soil to stop splash.
+Water at the base early in the day so leaves dry quickly.
+Use labeled fungicides if wet, humid weather continues."
+34,Tomato : Spider Mites | Two-Spotted Spider Mite,"Tiny pests on the undersides of leaves that cause fine yellow speckling, bronzing, and webbing. Plants may look dry and stressed in hot, dusty weather.","Check undersides of leaves regularly, especially in hot, dry periods.
+Spray plants with a strong jet of water to knock mites off.
+Avoid broad‑spectrum insecticides that kill beneficial predators.
+Use insecticidal soap, horticultural oil, or miticides labeled for spider mites if needed."
+35,Tomato : Target Spot,"Fungal disease that causes brown spots with rings on older leaves, leading to yellowing and leaf drop. Spots can also appear on stems and fruit.","Avoid planting new tomatoes next to old infected crops.
+Remove lower leaves with spots and improve air flow around plants.
+Keep the area weed‑free and avoid overhead irrigation.
+Rotate fields and use labeled fungicides if disease is severe."
+36,Tomato : Yellow Leaf Curl Virus,"Viral disease spread by whiteflies that causes upward‑curled, yellow leaves and stunted, bushy plants with little or no fruit. There is no cure once plants are infected.","Use only healthy, certified transplants and TYLCV‑resistant varieties where available.
+Control whiteflies with yellow sticky traps and appropriate insecticides or oils.
+Remove and destroy infected plants quickly.
+Keep the area free of weedy hosts and avoid planting near infested crops."
+37,Tomato : Mosaic Virus,"Stable viruses (ToMV/TMV) that cause mottled light‑and‑dark green leaves, leaf distortion, stunting, and uneven fruit ripening. Infected plants stay infected.","Use certified virus‑free seed or treat seed before planting.
+Buy transplants only from clean, reputable sources.
+Wash hands and disinfect tools regularly, especially after handling tobacco.
+Remove and destroy infected plants and plant debris."
+38,Tomato : Healthy,"Plants have strong stems, deep green leaves, and plenty of blossoms and fruit.","Plant in warm soil in a sunny spot.
+Stake or cage plants and remove lower leaves to improve air flow.
+Water regularly at soil level and mulch to keep moisture even.
+Fertilize lightly once plants start flowering; avoid too much nitrogen."
