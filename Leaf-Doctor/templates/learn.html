@@ -1,63 +1,229 @@
 {% extends 'base.html' %}
-{% block pagetitle %}Learn More{% endblock pagetitle %}
+{% block pagetitle %}Disease Library{% endblock pagetitle %}
 {% block body %}
+
+<!-- Hero Section -->
 <section class="learn-hero">
-    <div>
-        <p class="eyebrow">Explore the coverage</p>
-        <h1>All supported plant diseases at a glance</h1>
-        <p>
-            The onboard CNN can currently recognize {{ total }} crop diseases across fruits, vegetables, and ornamentals.
-            Multi-image uploads improve confidence, and the chat advisor grounds responses in these entries using embeddings plus Groq LLM (with HuggingFace as fallback).
-        </p>
-        <div class="hero-links">
-            <a class="secondary-link" href="{{ url_for('home_page') }}" rel="noreferrer">Return to chatbot</a>
-            <a class="secondary-link" href="https://huggingface.co/HuggingFaceH4/zephyr-7b-beta" target="_blank" rel="noreferrer">Advisor model info</a>
-            <a class="secondary-link" href="https://data.mendeley.com/datasets/tywbtsjrjv/1" target="_blank" rel="noreferrer">DataSet Used</a>
+    <div class="learn-hero-content">
+        <div class="learn-hero-text">
+            <div class="hero-badge">
+                <i data-lucide="library"></i>
+                <span>Knowledge Base</span>
+            </div>
+            <h1 class="hero-title">
+                Plant Disease
+                <span class="gradient-text">Encyclopedia</span>
+            </h1>
+            <p class="hero-description">
+                Explore our comprehensive database of <strong>{{ total }}</strong> plant diseases. 
+                Our CNN model can identify these conditions from leaf images, and our AI advisor 
+                provides treatment recommendations grounded in this knowledge.
+            </p>
+            <div class="learn-hero-actions">
+                <a href="{{ url_for('home_page') }}" class="btn btn-primary">
+                    <i data-lucide="scan"></i>
+                    <span>Start Diagnosis</span>
+                </a>
+                <a href="https://data.mendeley.com/datasets/tywbtsjrjv/1" target="_blank" rel="noreferrer" class="btn btn-secondary">
+                    <i data-lucide="database"></i>
+                    <span>View Dataset</span>
+                </a>
+            </div>
+        </div>
+        <div class="learn-hero-stats">
+            <div class="stat-card glass-card">
+                <div class="stat-icon">
+                    <i data-lucide="bug"></i>
+                </div>
+                <div class="stat-value">{{ total }}</div>
+                <div class="stat-label">Disease Classes</div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon">
+                    <i data-lucide="leaf"></i>
+                </div>
+                <div class="stat-value">14+</div>
+                <div class="stat-label">Plant Species</div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon">
+                    <i data-lucide="brain"></i>
+                </div>
+                <div class="stat-value">87K</div>
+                <div class="stat-label">Training Images</div>
+            </div>
         </div>
     </div>
-    <div class="learn-hero-card">
-        <p class="eyebrow">Why this page?</p>
-        <p>
-            This section lets farmers quickly check which crops are supported before they rely on the AI assistant.
-            The crop gallery sets clear expectations and doubles as a simple study guide for field scouts.
-        </p>
-        <p class="muted">Read any disease card to craft better advisor prompts.</p>    </div>
 </section>
 
-<section class="disease-grid" aria-label="Diseases catalog">
-    {% for disease in diseases %}
-    <article class="disease-card">
-        <h3>{{ disease.name }}</h3>
-        <p>{{ disease.summary }}</p>
-        {% if disease.steps %}
-        <ul>
-            {% for step in disease.steps %}
-            <li>{{ step }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    </article>
-    {% endfor %}
+<!-- Search and Filter -->
+<section class="filter-section">
+    <div class="search-bar glass-card">
+        <i data-lucide="search"></i>
+        <input 
+            type="text" 
+            id="diseaseSearch" 
+            placeholder="Search diseases by name or description..."
+            class="search-input"
+        />
+        <button type="button" class="btn btn-ghost btn-icon" id="clearSearch" title="Clear search">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+    <div class="filter-info">
+        <span id="resultCount">Showing all {{ total }} diseases</span>
+    </div>
 </section>
 
-<section class="team-section" id="team">
-    <div>
-        <p class="eyebrow">Built by</p>
-        <h2>The Leaf Doctor makers</h2>
+<!-- Disease Grid -->
+<section class="disease-section">
+    <div class="disease-grid" id="diseaseGrid">
+        {% for disease in diseases %}
+        <article class="disease-card glass-card" data-name="{{ disease.name|lower }}" data-summary="{{ disease.summary|lower }}">
+            <div class="disease-card-header">
+                <div class="disease-icon">
+                    <i data-lucide="alert-circle"></i>
+                </div>
+                <h3 class="disease-name">{{ disease.name }}</h3>
+            </div>
+            <p class="disease-summary">{{ disease.summary }}</p>
+            {% if disease.steps %}
+            <div class="disease-steps">
+                <h4>
+                    <i data-lucide="list-checks"></i>
+                    Treatment Steps
+                </h4>
+                <ul>
+                    {% for step in disease.steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="disease-card-footer">
+                <button type="button" class="btn btn-ghost btn-sm disease-ask-btn" data-disease="{{ disease.name }}">
+                    <i data-lucide="message-circle"></i>
+                    Ask About This
+                </button>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    
+    <!-- Empty State -->
+    <div class="no-results hidden" id="noResults">
+        <div class="no-results-content">
+            <i data-lucide="search-x"></i>
+            <h3>No diseases found</h3>
+            <p>Try a different search term or clear the filter</p>
+            <button type="button" class="btn btn-secondary" id="clearFilterBtn">
+                Clear Search
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="team-section">
+    <div class="team-header">
+        <div class="hero-badge">
+            <i data-lucide="users"></i>
+            <span>The Team</span>
+        </div>
+        <h2>Built by Passionate Developers</h2>
         <p>
-            Two friends teamed up to blend agronomy intuition with production-ready AI. Connect with us below for collaborations,
-            dataset contributions, or deployment support.
+            We combined agronomy knowledge with production-ready AI to create 
+            a tool that helps farmers and gardeners diagnose plant diseases accurately.
         </p>
     </div>
+    
     <div class="team-grid">
         {% for maker in builders %}
-        <div class="team-card">
+        <div class="team-card glass-card">
+            <div class="team-avatar">
+                <span>{{ maker.name[0] }}</span>
+            </div>
             <h3>{{ maker.name }}</h3>
-            <p class="muted">{{ maker.role }}</p>
-            <a href="{{ maker.linkedin }}" target="_blank" rel="noreferrer">LinkedIn profile ↗</a>
+            <p class="team-role">{{ maker.role }}</p>
+            <a href="{{ maker.linkedin }}" target="_blank" rel="noreferrer" class="btn btn-secondary btn-sm">
+                <i data-lucide="linkedin"></i>
+                <span>Connect</span>
+            </a>
         </div>
         {% endfor %}
     </div>
 </section>
-{% endblock body %}
 
+<!-- Pass data to JavaScript via data attributes -->
+<div id="pageData" data-total="{{ total }}" style="display:none;"></div>
+
+<script>
+    // Disease search functionality
+    const pageData = document.getElementById('pageData');
+    const totalCount = parseInt(pageData.dataset.total, 10) || 0;
+    
+    const searchInput = document.getElementById('diseaseSearch');
+    const clearSearch = document.getElementById('clearSearch');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const diseaseGrid = document.getElementById('diseaseGrid');
+    const noResults = document.getElementById('noResults');
+    const resultCount = document.getElementById('resultCount');
+    const diseaseCards = document.querySelectorAll('.disease-card');
+    
+    function filterDiseases(query) {
+        const searchTerm = query.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        diseaseCards.forEach(card => {
+            const name = card.dataset.name || '';
+            const summary = card.dataset.summary || '';
+            const matches = !searchTerm || name.includes(searchTerm) || summary.includes(searchTerm);
+            
+            if (matches) {
+                card.classList.remove('hidden');
+                card.style.animation = 'fadeInUp 0.3s ease forwards';
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+        
+        if (visibleCount === 0) {
+            noResults.classList.remove('hidden');
+            diseaseGrid.classList.add('hidden');
+        } else {
+            noResults.classList.add('hidden');
+            diseaseGrid.classList.remove('hidden');
+        }
+        
+        resultCount.textContent = searchTerm 
+            ? `Found ${visibleCount} of ${totalCount} diseases`
+            : `Showing all ${totalCount} diseases`;
+        
+        clearSearch.style.opacity = searchTerm ? '1' : '0';
+    }
+    
+    searchInput?.addEventListener('input', (e) => filterDiseases(e.target.value));
+    
+    clearSearch?.addEventListener('click', () => {
+        searchInput.value = '';
+        filterDiseases('');
+        searchInput.focus();
+    });
+    
+    clearFilterBtn?.addEventListener('click', () => {
+        searchInput.value = '';
+        filterDiseases('');
+    });
+    
+    // Ask about disease - redirect to home with context
+    document.querySelectorAll('.disease-ask-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const disease = btn.dataset.disease;
+            sessionStorage.setItem('selectedDisease', disease);
+            window.location.href = '/' ;
+        });
+    });
+</script>
+
+{% endblock body %}

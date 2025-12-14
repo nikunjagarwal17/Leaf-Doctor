@@ -18,6 +18,7 @@ instance/
 # Environment variables
 .env
 .env.local
+*.bin
 
 # IDE
 .vscode/

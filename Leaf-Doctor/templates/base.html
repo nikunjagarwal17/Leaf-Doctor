@@ -1,28 +1,130 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Leaf Doctor | {% block pagetitle %}{% endblock pagetitle %}</title>
+        
+        <!-- Preconnect for performance -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+        
+        <!-- Modern font stack -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+        
+        <!-- Lucide Icons -->
+        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+        
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
         <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}" />
+        
+        <!-- Theme initialization to prevent flash -->
+        <script>
+            (function() {
+                const saved = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+            })();
+        </script>
     </head>
     <body class="app-shell">
+        <!-- Animated background gradient -->
+        <div class="bg-gradient" aria-hidden="true"></div>
+        
         <header class="site-header">
-            <a href="{{ url_for('home_page') }}" class="brand">Leaf Doctor</a>
-            {% set current_path = request.path %}
-            <nav>
-                <a href="{{ url_for('home_page') }}" class="{% if current_path == url_for('home_page') %}active{% endif %}">Chatbot</a>
-                <a href="{{ url_for('learn_page') }}" class="{% if current_path == url_for('learn_page') %}active{% endif %}">Learn more</a>
-                <a href="https://github.com/nikunjagarwal17/Leaf-Doctor" target="_blank" rel="noreferrer">GitHub</a>
-            </nav>
+            <div class="header-content">
+                <a href="{{ url_for('home_page') }}" class="brand">
+                    <span class="brand-icon">
+                        <i data-lucide="leaf"></i>
+                    </span>
+                    <span class="brand-text">Leaf Doctor</span>
+                    <span class="brand-badge">AI</span>
+                </a>
+                
+                {% set current_path = request.path %}
+                <nav class="nav-links">
+                    <a href="{{ url_for('home_page') }}" class="nav-link {% if current_path == url_for('home_page') %}active{% endif %}">
+                        <i data-lucide="message-square"></i>
+                        <span>Diagnosis</span>
+                    </a>
+                    <a href="{{ url_for('learn_page') }}" class="nav-link {% if current_path == url_for('learn_page') %}active{% endif %}">
+                        <i data-lucide="book-open"></i>
+                        <span>Disease Library</span>
+                    </a>
+                    <a href="https://github.com/nikunjagarwal17/Leaf-Doctor" target="_blank" rel="noreferrer" class="nav-link">
+                        <i data-lucide="github"></i>
+                        <span>GitHub</span>
+                    </a>
+                </nav>
+                
+                <div class="header-actions">
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <i data-lucide="sun" class="theme-icon-light"></i>
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                    </button>
+                    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                        <i data-lucide="menu"></i>
+                    </button>
+                </div>
+            </div>
         </header>
+        
+        <!-- Mobile navigation drawer -->
+        <div class="mobile-nav" id="mobileNav">
+            <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+            <div class="mobile-nav-content">
+                <a href="{{ url_for('home_page') }}" class="mobile-nav-link {% if current_path == url_for('home_page') %}active{% endif %}">
+                    <i data-lucide="message-square"></i>
+                    Diagnosis
+                </a>
+                <a href="{{ url_for('learn_page') }}" class="mobile-nav-link {% if current_path == url_for('learn_page') %}active{% endif %}">
+                    <i data-lucide="book-open"></i>
+                    Disease Library
+                </a>
+                <a href="https://github.com/nikunjagarwal17/Leaf-Doctor" target="_blank" rel="noreferrer" class="mobile-nav-link">
+                    <i data-lucide="github"></i>
+                    GitHub
+                </a>
+            </div>
+        </div>
+        
         <main class="app-content">
             {% block body %}{% endblock body %}
         </main>
+        
+        <footer class="site-footer">
+            <div class="footer-content">
+                <p>Built with <i data-lucide="heart" class="footer-heart"></i> by the Leaf Doctor team</p>
+                <p class="footer-tech">Powered by PyTorch CNN • Groq LLM • Sentence Transformers</p>
+            </div>
+        </footer>
+        
         <script type="module" src="{{ url_for('static', filename='chat.js') }}"></script>
+        <script>
+            // Initialize Lucide icons
+            lucide.createIcons();
+            
+            // Theme toggle
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle?.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+            });
+            
+            // Mobile menu
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileNav = document.getElementById('mobileNav');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            
+            mobileMenuBtn?.addEventListener('click', () => {
+                mobileNav?.classList.toggle('open');
+            });
+            
+            mobileNavOverlay?.addEventListener('click', () => {
+                mobileNav?.classList.remove('open');
+            });
+        </script>
     </body>
 </html>

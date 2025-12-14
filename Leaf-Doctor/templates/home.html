@@ -1,114 +1,258 @@
 {% extends 'base.html' %}
-{% block pagetitle %}Plant Copilot{% endblock pagetitle %}
+{% block pagetitle %}AI Plant Disease Diagnosis{% endblock pagetitle %}
 {% block body %}
-<section class="hero-card">
-    <div>
-        <p class="eyebrow">Leaf Doctor</p>
-        <h1>Multi-image plant doctor with embedded knowledge and agentic chat</h1>
-        <p class="lead">
-            Upload multiple leaf photos to boost confidence, then chat with an embedded knowledge base
-            grounded in your CSV data. Powered by Groq LLM (Llama 3.3) with HuggingFace as fallback.
-        </p>
-        <ul class="hero-highlights">
-            <li>Ensembled CNN predictions across up to 4 images</li>
-            <li>Embedded disease library powers context-tuned answers</li>
-            <li>Agentic chat with optional reasoning drawer and voice</li>
-        </ul>
-        <div class="hero-links">
-            <a class="secondary-link" href="{{ url_for('learn_page') }}">View supported diseases</a>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-badge">
+                <i data-lucide="sparkles"></i>
+                <span>Agentic AI Powered</span>
+            </div>
+            <h1 class="hero-title">
+                Diagnose Plant Diseases
+                <span class="gradient-text">Instantly with AI</span>
+            </h1>
+            <p class="hero-description">
+                Upload leaf photos and get instant disease diagnosis powered by our ensemble CNN model. 
+                Ask follow-up questions grounded in our embedded knowledge base with Groq LLM.
+            </p>
+            <div class="hero-features">
+                <div class="feature-chip">
+                    <i data-lucide="layers"></i>
+                    <span>Multi-image Ensemble</span>
+                </div>
+                <div class="feature-chip">
+                    <i data-lucide="brain"></i>
+                    <span>39 Disease Classes</span>
+                </div>
+                <div class="feature-chip">
+                    <i data-lucide="message-circle"></i>
+                    <span>Agentic Chat</span>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="hero-cta">
-        <div class="hero-badge">Beta</div>
-        <p class="hero-cta-text">Add up to four clear photos of the affected leaf to begin.</p>
-        <button class="primary" id="chooseImagesBtn" type="button">Choose leaf images</button>
-        <p class="muted">Accepted formats: JPG, PNG. Max 10MB each.</p>
+        <div class="hero-upload-card" id="dropZone">
+            <div class="upload-card-glow"></div>
+            <div class="upload-card-content">
+                <div class="upload-icon-wrapper">
+                    <div class="upload-icon-pulse"></div>
+                    <i data-lucide="image-plus" class="upload-icon"></i>
+                </div>
+                <h3>Drop leaf images here</h3>
+                <p>or click to browse</p>
+                <p class="upload-hint">Up to 4 images • JPG, PNG • Max 10MB each</p>
+                <button class="btn btn-primary btn-lg" id="chooseImagesBtn" type="button">
+                    <i data-lucide="upload"></i>
+                    <span>Choose Images</span>
+                </button>
+            </div>
+            <input type="file" name="images" id="imageInput" accept="image/*" hidden multiple />
+        </div>
     </div>
 </section>
 
-<section class="chat-layout">
-    <div class="chat-panel">
-        <header class="chat-header">
-            <div>
-                <p class="eyebrow">Conversation</p>
-                <h2>Plant Care Copilot</h2>
-            </div>
-            <div class="status-group">
-                <span class="status-dot online">CNN ready</span>
-                <span class="status-dot secondary">Embeddings loaded</span>
-                <span class="status-dot secondary">TinyLlama if installed</span>
-            </div>
-        </header>
-        <div class="chat-stream" id="chatStream" aria-live="polite"></div>
-        <div class="composer-card">
-            <input type="file" name="images" id="imageInput" accept="image/*" hidden multiple />
-            <div class="upload-row">
-                <div>
-                    <p class="eyebrow">Leaf images</p>
-                    <p class="muted">Use multiple angles to improve confidence.</p>
-                </div>
-                <div class="upload-actions">
-                    <button type="button" class="secondary" id="addImagesBtn">Add images</button>
-                    <button type="button" class="primary" id="predictBtn">Run diagnosis</button>
-                </div>
-            </div>
-            <label for="noteField" class="muted">Add brief notes (symptoms, crop stage, location) to refine results with embeddings.</label>
-            <textarea
-                id="noteField"
-                name="note"
-                rows="2"
-                placeholder="e.g. Yellow spots underside, humid greenhouse, early fruiting stage"
-            ></textarea>
-            <ul class="thumb-list" id="thumbList">
-                <li class="muted">No images selected</li>
-            </ul>
-
-            <div id="advisorPanel" class="advisor-panel hidden">
-                <label for="promptField">Ask about this disease</label>
-                <textarea
-                    id="promptField"
-                    name="prompt"
-                    rows="3"
-                    placeholder="Ask for treatments, supplies, or prevention tips..."
-                ></textarea>
-                <div class="composer-actions">
-                    <div class="composer-toggles">
-                        <label><input type="checkbox" id="thinkingToggle" checked /> Keep reasoning open</label>
-                        <label><input type="checkbox" id="speakToggle" /> Read replies aloud</label>
-                        <button type="button" class="ghost" id="voiceBtn">Voice input</button>
+<!-- Main Chat Interface -->
+<section class="chat-section">
+    <div class="chat-container">
+        <!-- Chat Panel -->
+        <div class="chat-panel glass-card">
+            <!-- Chat Header -->
+            <header class="chat-header">
+                <div class="chat-header-info">
+                    <div class="chat-avatar">
+                        <i data-lucide="bot"></i>
                     </div>
-                    <div class="composer-buttons">
-                        <button type="button" class="primary" id="sendBtn">Send</button>
+                    <div>
+                        <h2>Plant Care Assistant</h2>
+                        <div class="status-indicators">
+                            <span class="status-badge status-online">
+                                <span class="status-dot"></span>
+                                CNN Ready
+                            </span>
+                            <span class="status-badge">
+                                <i data-lucide="database" style="width: 12px; height: 12px;"></i>
+                                Embeddings Loaded
+                            </span>
+                            <span class="status-badge">
+                                <i data-lucide="zap" style="width: 12px; height: 12px;"></i>
+                                Groq LLM
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <p class="muted api-hint">
-                    Answers are grounded in the embedded CSV knowledge and generated with TinyLlama when available,
-                    falling back to Hugging Face.
+                <button class="btn btn-ghost btn-icon" id="clearChatBtn" title="Clear chat">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </header>
+            
+            <!-- Chat Messages Stream -->
+            <div class="chat-stream" id="chatStream" aria-live="polite">
+                <!-- Messages will be injected here -->
+            </div>
+            
+            <!-- Composer Card -->
+            <div class="composer-card">
+                <!-- Image Preview Row -->
+                <div class="image-preview-section">
+                    <div class="preview-header">
+                        <div class="preview-info">
+                            <i data-lucide="images"></i>
+                            <span>Selected Images</span>
+                            <span class="image-count" id="imageCount">0</span>
+                        </div>
+                        <div class="preview-actions">
+                            <button type="button" class="btn btn-secondary btn-sm" id="addImagesBtn">
+                                <i data-lucide="plus"></i>
+                                Add More
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" id="predictBtn" disabled>
+                                <i data-lucide="scan"></i>
+                                Run Diagnosis
+                            </button>
+                        </div>
+                    </div>
+                    <div class="thumb-grid" id="thumbList">
+                        <div class="empty-state">
+                            <i data-lucide="image-off"></i>
+                            <span>No images selected</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Note Input -->
+                <div class="note-section">
+                    <label for="noteField" class="input-label">
+                        <i data-lucide="file-text"></i>
+                        Additional Notes <span class="optional">(optional)</span>
+                    </label>
+                    <textarea
+                        id="noteField"
+                        name="note"
+                        rows="2"
+                        placeholder="e.g., Yellow spots on underside, humid greenhouse, early fruiting stage..."
+                        class="input-textarea"
+                    ></textarea>
+                </div>
+                
+                <!-- Advisor Panel (appears after diagnosis) -->
+                <div id="advisorPanel" class="advisor-panel hidden">
+                    <div class="advisor-divider">
+                        <span>Ask About This Disease</span>
+                    </div>
+                    
+                    <div class="prompt-input-group">
+                        <textarea
+                            id="promptField"
+                            name="prompt"
+                            rows="2"
+                            placeholder="Ask for treatments, prevention tips, or organic solutions..."
+                            class="input-textarea"
+                        ></textarea>
+                        <div class="prompt-actions">
+                            <div class="prompt-toggles">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="thinkingToggle" checked />
+                                    <span class="toggle-switch"></span>
+                                    <span>Show Reasoning</span>
+                                </label>
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="speakToggle" />
+                                    <span class="toggle-switch"></span>
+                                    <span>Read Aloud</span>
+                                </label>
+                            </div>
+                            <div class="prompt-buttons">
+                                <button type="button" class="btn btn-ghost btn-icon" id="voiceBtn" title="Voice input">
+                                    <i data-lucide="mic"></i>
+                                </button>
+                                <button type="button" class="btn btn-primary" id="sendBtn">
+                                    <i data-lucide="send"></i>
+                                    <span>Send</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="advisor-hint">
+                        <i data-lucide="info"></i>
+                        Responses are grounded in our embedded disease knowledge base
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar glass-card">
+            <div class="sidebar-section">
+                <h3>
+                    <i data-lucide="zap"></i>
+                    Quick Tips
+                </h3>
+                <ul class="tips-list">
+                    <li>
+                        <i data-lucide="check-circle"></i>
+                        <span>Use multiple angles for better accuracy</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle"></i>
+                        <span>Clear, well-lit photos work best</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle"></i>
+                        <span>Include notes about symptoms for refined context</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle"></i>
+                        <span>Ask follow-up questions for treatment plans</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>
+                    <i data-lucide="git-branch"></i>
+                    How It Works
+                </h3>
+                <ol class="workflow-list">
+                    <li>
+                        <div class="workflow-step">1</div>
+                        <div>
+                            <strong>Upload</strong>
+                            <span>Add up to 4 leaf photos</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="workflow-step">2</div>
+                        <div>
+                            <strong>Analyze</strong>
+                            <span>CNN ensemble predicts disease</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="workflow-step">3</div>
+                        <div>
+                            <strong>Consult</strong>
+                            <span>Ask questions, get expert advice</span>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            
+            <div class="sidebar-card">
+                <div class="sidebar-card-icon">
+                    <i data-lucide="sparkles"></i>
+                </div>
+                <h4>Agentic System</h4>
+                <p>
+                    Our AI agent autonomously plans diagnosis steps, 
+                    self-corrects on low confidence, and retrieves 
+                    relevant knowledge for accurate advice.
                 </p>
             </div>
-        </div>
+        </aside>
     </div>
-    <aside class="side-panel">
-        <h3>What changed</h3>
-        <ul class="bullet-list">
-            <li>Multi-image upload with ensemble scoring to lift accuracy.</li>
-            <li>Embedded knowledge base built from your CSV for tuned replies.</li>
-            <li>Agentic responses with an optional reasoning drawer.</li>
-            <li>Voice input and reply playback when the browser supports it.</li>
-        </ul>
-        <h3>Workflow</h3>
-        <ol>
-            <li>Attach up to four clear leaf photos.</li>
-            <li>The CNN model ensembles predictions and surfaces confidence.</li>
-            <li>Ask follow-ups; answers cite the embedded disease context.</li>
-        </ol>
-        <div class="key-card">
-            <p class="eyebrow">Advisor Feature</p>
-            <p>
-                The chat pairs the latest diagnosis with your stored disease data so you can request treatment plans, supply lists,
-                or prevention routines in one place.
-            </p>
-        </div>
-    </aside>
 </section>
+
 {% endblock body %}

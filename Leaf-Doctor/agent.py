@@ -1,7 +1,6 @@
 """
 Agentic Orchestrator for Leaf Doctor
 
-This module implements a fully agentic system with:
 1. Autonomous Tool Selection - Agent decides which tools to use
 2. Multi-step Reasoning - Plans, executes, and tracks progress
 3. Self-Correction - Reflects on outputs and retries if needed
@@ -299,8 +298,9 @@ class AgentOrchestrator:
             disease = step.input_data.get("disease") or context.get("disease")
             prompt = step.input_data.get("prompt", "")
             retrieved_context = context.get("retrieved_context", [])
+            formatted_context = context.get("formatted_context", "")
             
-            return self.tools["generate_advice"](prompt, disease, retrieved_context)
+            return self.tools["generate_advice"](prompt, disease, retrieved_context, formatted_context)
         
         elif step.tool == ToolType.CONFIDENCE_CHECKER:
             return self._check_confidence(step.input_data.get("check_type"), context)
@@ -569,7 +569,7 @@ def create_agent_tools(
     Args:
         cnn_predict_fn: Function that takes image paths and returns prediction
         retrieve_fn: Function that takes query and disease, returns context
-        generate_advice_fn: Function that takes prompt, disease, context and returns advice
+        generate_advice_fn: Function that takes (prompt, disease, context, formatted_context) and returns advice
     """
     return {
         "cnn_predict": cnn_predict_fn,

@@ -18,22 +18,26 @@ from werkzeug.utils import secure_filename
 import CNN
 from agent import AgentOrchestrator, create_agent_tools
 
-# Optional heavy dependencies
-try:  # pragma: no cover - optional path
+
+try:  
     from sentence_transformers import SentenceTransformer
-except Exception:  # pragma: no cover - keep server alive without embeddings
+except Exception:  
     SentenceTransformer = None
 
-# Groq API client
 try:
     from groq import Groq
 except Exception:
     Groq = None
 
+try:
+    import faiss
+except Exception:
+    faiss = None
+
 
 load_dotenv()
 
-# Global agent instance (initialized after tool functions are defined)
+
 AGENT: AgentOrchestrator = None
 
 BASE_DIR = Path(__file__).parent
@@ -69,7 +73,12 @@ DISEASE_CATALOG = [
 
 # Embedding cache configuration
 EMBEDDINGS_CACHE_FILE = BASE_DIR / "embeddings_cache.pkl"
+FAISS_INDEX_FILE = BASE_DIR / "faiss_index.bin"
 CSV_FILE = BASE_DIR / "disease_info.csv"
+
+# Global FAISS index
+FAISS_INDEX = None
+DOCUMENT_STORE: list[dict] = []  # Stores document metadata (name, text)
 
 
 def get_csv_hash() -> str:
@@ -88,47 +97,77 @@ def load_embedder():
         return None
 
 
-def load_cached_embeddings() -> tuple[list[dict], str] | None:
-    """Load embeddings from cache file if it exists and CSV hasn't changed."""
-    if not EMBEDDINGS_CACHE_FILE.exists():
+def load_cached_faiss_index() -> tuple[list[dict], str] | None:
+    """Load FAISS index and document store from cache if CSV hasn't changed."""
+    global FAISS_INDEX
+    
+    if not EMBEDDINGS_CACHE_FILE.exists() or not FAISS_INDEX_FILE.exists():
         return None
+    
+    if faiss is None:
+        print("FAISS not available, falling back to in-memory search")
+        return None
+    
     try:
+        # Load document store with metadata
         with open(EMBEDDINGS_CACHE_FILE, "rb") as f:
             cache = pickle.load(f)
+        
         # Validate cache structure and CSV hash
         if isinstance(cache, dict) and cache.get("csv_hash") == get_csv_hash():
-            print(f"Loaded embeddings from cache ({len(cache['embeddings'])} diseases)")
-            return cache["embeddings"], cache["csv_hash"]
+            # Load FAISS index
+            FAISS_INDEX = faiss.read_index(str(FAISS_INDEX_FILE))
+            print(f"✅ Loaded FAISS index from cache ({FAISS_INDEX.ntotal} vectors)")
+            return cache["documents"], cache["csv_hash"]
     except Exception as e:
-        print(f"Cache load failed: {e}")
+        print(f"FAISS cache load failed: {e}")
     return None
 
 
-def save_embeddings_cache(embeddings: list[dict], csv_hash: str) -> None:
-    """Save embeddings to cache file."""
+def save_faiss_index(documents: list[dict], embeddings_matrix: np.ndarray, csv_hash: str) -> None:
+    """Save FAISS index and document store to cache."""
+    global FAISS_INDEX
+    
+    if faiss is None:
+        return
+    
     try:
-        cache = {"csv_hash": csv_hash, "embeddings": embeddings}
+        # Save FAISS index
+        faiss.write_index(FAISS_INDEX, str(FAISS_INDEX_FILE))
+        
+        # Save document metadata (without embeddings - they're in FAISS)
+        cache = {
+            "csv_hash": csv_hash,
+            "documents": documents
+        }
         with open(EMBEDDINGS_CACHE_FILE, "wb") as f:
             pickle.dump(cache, f)
-        print(f"Saved embeddings cache ({len(embeddings)} diseases)")
+        
+        print(f"✅ Saved FAISS index ({FAISS_INDEX.ntotal} vectors) and document cache")
     except Exception as e:
-        print(f"Cache save failed: {e}")
+        print(f"FAISS cache save failed: {e}")
 
 
-def build_knowledge_embeddings(embedder) -> list[dict]:
+def build_faiss_index(embedder) -> list[dict]:
+    """Build FAISS index from disease information CSV."""
+    global FAISS_INDEX, DOCUMENT_STORE
     
     if embedder is None:
         return []
     
     # Try loading from cache first
-    cached = load_cached_embeddings()
+    cached = load_cached_faiss_index()
     if cached:
-        return cached[0]
+        DOCUMENT_STORE = cached[0]
+        return DOCUMENT_STORE
     
-    # Generate fresh embeddings
-    print("Generating embeddings (CSV changed or no cache)...")
+    # Generate fresh embeddings and build FAISS index
+    print("🔨 Building FAISS index (CSV changed or no cache)...")
     csv_hash = get_csv_hash()
-    embeddings: list[dict] = []
+    
+    documents: list[dict] = []
+    embeddings_list: list[np.ndarray] = []
+    
     for row in disease_info.itertuples(index=False):
         steps = [
             step.strip()
@@ -140,11 +179,30 @@ def build_knowledge_embeddings(embedder) -> list[dict]:
             f"Best practices: {'; '.join(steps) if steps else 'No steps listed.'}"
         )
         vector = embedder.encode(text, normalize_embeddings=True)
-        embeddings.append({"name": row.disease_name, "text": text, "embedding": vector})
+        
+        documents.append({"name": row.disease_name, "text": text})
+        embeddings_list.append(vector)
     
-   
-    save_embeddings_cache(embeddings, csv_hash)
-    return embeddings
+    # Convert to numpy matrix
+    embeddings_matrix = np.array(embeddings_list, dtype=np.float32)
+    embedding_dim = embeddings_matrix.shape[1]
+    
+    if faiss is not None:
+        # Create FAISS index - using IndexFlatIP for inner product (cosine similarity with normalized vectors)
+        FAISS_INDEX = faiss.IndexFlatIP(embedding_dim)
+        FAISS_INDEX.add(embeddings_matrix)
+        print(f"✅ Created FAISS index with {FAISS_INDEX.ntotal} vectors (dim={embedding_dim})")
+        
+        # Save to cache
+        save_faiss_index(documents, embeddings_matrix, csv_hash)
+    else:
+        # Fallback: store embeddings in documents for in-memory search
+        print("⚠️ FAISS not available, using in-memory fallback")
+        for i, doc in enumerate(documents):
+            doc["embedding"] = embeddings_list[i]
+    
+    DOCUMENT_STORE = documents
+    return documents
 
 BUILDERS = [
     {
@@ -164,41 +222,60 @@ model.load_state_dict(torch.load(BASE_DIR / "plant_disease_model_v1.pt", map_loc
 model.to(DEVICE)
 model.eval()
 
-# LLM Configuration: Groq (Priority 1) -> HuggingFace (Priority 2)
-# Groq API
+
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_MODEL_ID = os.environ.get("GROQ_MODEL_ID", "llama-3.3-70b-versatile")
 GROQ_CLIENT = Groq(api_key=GROQ_API_KEY) if (Groq and GROQ_API_KEY) else None
 
-# HuggingFace API (Fallback)
 HF_MODEL_ID = "HuggingFaceH4/zephyr-7b-beta"
 HF_API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
 HF_CLIENT = InferenceClient(token=HF_API_KEY) if HF_API_KEY else None
 
 EMBED_MODEL_NAME = os.environ.get("EMBED_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
 EMBEDDER = None
-EMBEDDINGS: list[dict] = []
 
-# Lazy-load models that are optional to avoid slowing down cold start when unavailable.
+# Lazy-load models and build FAISS index
 if EMBEDDER is None:
     EMBEDDER = load_embedder()
-    EMBEDDINGS = build_knowledge_embeddings(EMBEDDER)
+    build_faiss_index(EMBEDDER)
 
 
 def retrieve_context(query: str, disease: str | None = None, top_k: int = 3) -> list[dict]:
-    """Return top-k context snippets from the embedded CSV knowledge."""
-    if EMBEDDER is None or not EMBEDDINGS:
+    """Return top-k context snippets using FAISS vector search."""
+    global FAISS_INDEX, DOCUMENT_STORE
+    
+    if EMBEDDER is None or not DOCUMENT_STORE:
         return []
 
     prompt = f"{disease or 'unknown disease'} - {query}".strip()
-    query_vec = EMBEDDER.encode(prompt, normalize_embeddings=True)
-    scored = []
-    for item in EMBEDDINGS:
-        score = float(np.dot(query_vec, item["embedding"]))
-        scored.append({**item, "score": score})
-
-    scored.sort(key=lambda x: x["score"], reverse=True)
-    return scored[:top_k]
+    query_vec = EMBEDDER.encode(prompt, normalize_embeddings=True).astype(np.float32)
+    
+    # Reshape for FAISS (needs 2D array)
+    query_vec = query_vec.reshape(1, -1)
+    
+    if FAISS_INDEX is not None and faiss is not None:
+        # Use FAISS for efficient similarity search
+        scores, indices = FAISS_INDEX.search(query_vec, top_k)
+        
+        results = []
+        for i, idx in enumerate(indices[0]):
+            if idx < len(DOCUMENT_STORE) and idx >= 0:
+                doc = DOCUMENT_STORE[idx]
+                results.append({
+                    "name": doc["name"],
+                    "text": doc["text"],
+                    "score": float(scores[0][i])
+                })
+        return results
+    else:
+        # Fallback to in-memory search if FAISS not available
+        scored = []
+        for item in DOCUMENT_STORE:
+            if "embedding" in item:
+                score = float(np.dot(query_vec.flatten(), item["embedding"]))
+                scored.append({"name": item["name"], "text": item["text"], "score": score})
+        scored.sort(key=lambda x: x["score"], reverse=True)
+        return scored[:top_k]
 
 
 def sanitize_context(context: list[dict]) -> list[dict]:
@@ -222,8 +299,8 @@ def format_context(context: list[dict]) -> str:
     return "\n".join([f"- {c['text']} (relevance: {c['score']:.2f})" for c in context])
 
 
-def _infer_logits(image_path: Path) -> np.ndarray:
-    """Run the CNN on a single image and return logits."""
+def _infer_logits(image_path: Path) -> np.ndarray: #"""Run the CNN on a single image and return logits."""
+    
     image = Image.open(image_path).convert("RGB")
     image = image.resize((224, 224))
     input_data = TF.to_tensor(image).unsqueeze(0).to(DEVICE)
@@ -232,8 +309,8 @@ def _infer_logits(image_path: Path) -> np.ndarray:
     return output.squeeze(0).detach().cpu().numpy()
 
 
-def aggregate_predictions(image_paths: list[Path]) -> dict:
-    """Ensemble logits across multiple images to boost confidence."""
+def aggregate_predictions(image_paths: list[Path]) -> dict: # """Ensemble logits across multiple images to boost confidence."""
+    
     logits_stack = []
     per_image = []
 
@@ -368,9 +445,6 @@ def fetch_advice(prompt: str, disease: str | None = None) -> dict:
     }
 
 
-# ============================================================================
-# AGENTIC TOOL WRAPPERS
-# ============================================================================
 
 def agent_cnn_predict(image_paths: list[Path]) -> dict:
     """
@@ -403,7 +477,8 @@ def agent_retrieve_context(query: str, disease: str | None = None) -> dict:
 
 
 def agent_generate_advice(prompt: str, disease: str | None = None, 
-                          retrieved_context: list[dict] = None) -> dict:
+                          retrieved_context: list[dict] = None,
+                          formatted_context: str = None) -> dict:
     """
     Tool wrapper for LLM advice generation - used by the agent.
     Uses Groq (Priority 1) -> HuggingFace (Priority 2).
@@ -411,9 +486,8 @@ def agent_generate_advice(prompt: str, disease: str | None = None,
     """
     # Use pre-retrieved context if available, otherwise retrieve
     if retrieved_context:
-        context = retrieved_context
         clean_context = retrieved_context
-        context_block = format_context(retrieved_context)
+        context_block = formatted_context if formatted_context else format_context(retrieved_context)
     else:
         context = retrieve_context(prompt, disease=disease)
         clean_context = sanitize_context(context)
@@ -659,4 +733,13 @@ def advisor_route():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    print("🌿 Leaf Doctor")
+    print("=" * 40)
+    print(f"Base directory: {BASE_DIR}")
+    print(f"Device: {DEVICE}")
+    print(f"Groq API: {'Configured' if GROQ_CLIENT else 'Not configured'}")
+    print(f"HuggingFace API: {'Configured' if HF_CLIENT else 'Not configured'}")
+    print(f"FAISS Index: {'Loaded (' + str(FAISS_INDEX.ntotal) + ' vectors)' if FAISS_INDEX else 'Not available'}")
+    print(f"Document Store: {len(DOCUMENT_STORE)} diseases")
+    print("=" * 40)
+    app.run(debug=True, port=5000)
