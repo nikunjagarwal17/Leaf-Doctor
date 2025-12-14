@@ -34,6 +34,6 @@ jobs:
         run: |
           # Start Flask in the background
           nohup python Leaf-Doctor/app.py &
-          sleep 100
+          sleep 5
           # Check if the app responds on localhost:5000
           curl --fail http://127.0.0.1:5000 || (echo 'App did not start' && exit 1)
