@@ -99,7 +99,6 @@ def load_embedder():
 
 def load_cached_faiss_index() -> tuple[list[dict], str] | None:
     """Load FAISS index and document store from cache if CSV hasn't changed."""
-    global FAISS_INDEX
     
     if not EMBEDDINGS_CACHE_FILE.exists() or not FAISS_INDEX_FILE.exists():
         return None
@@ -126,7 +125,6 @@ def load_cached_faiss_index() -> tuple[list[dict], str] | None:
 
 def save_faiss_index(documents: list[dict], embeddings_matrix: np.ndarray, csv_hash: str) -> None:
     """Save FAISS index and document store to cache."""
-    global FAISS_INDEX
     
     if faiss is None:
         return
@@ -150,7 +148,6 @@ def save_faiss_index(documents: list[dict], embeddings_matrix: np.ndarray, csv_h
 
 def build_faiss_index(embedder) -> list[dict]:
     """Build FAISS index from disease information CSV."""
-    global FAISS_INDEX, DOCUMENT_STORE
     
     if embedder is None:
         return []
@@ -242,7 +239,6 @@ if EMBEDDER is None:
 
 def retrieve_context(query: str, disease: str | None = None, top_k: int = 3) -> list[dict]:
     """Return top-k context snippets using FAISS vector search."""
-    global FAISS_INDEX, DOCUMENT_STORE
     
     if EMBEDDER is None or not DOCUMENT_STORE:
         return []

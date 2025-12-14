@@ -1,0 +1,39 @@
+name: CI - Flask App
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Leaf-Doctor/requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 Leaf-Doctor/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
+
+      - name: Run Flask app health check
+        env:
+          FLASK_APP: Leaf-Doctor/app.py
+        run: |
+          # Start Flask in the background
+          nohup python Leaf-Doctor/app.py &
+          sleep 100
+          # Check if the app responds on localhost:5000
+          curl --fail http://127.0.0.1:5000 || (echo 'App did not start' && exit 1)
