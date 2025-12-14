@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block pagetitle %}Plant Copilot{% endblock pagetitle %}
+{% block body %}
+<section class="hero-card">
+    <div>
+        <p class="eyebrow">Leaf Doctor</p>
+        <h1>Multi-image plant doctor with embedded knowledge and agentic chat</h1>
+        <p class="lead">
+            Upload multiple leaf photos to boost confidence, then chat with an embedded knowledge base
+            grounded in your CSV data. Powered by Groq LLM (Llama 3.3) with HuggingFace as fallback.
+        </p>
+        <ul class="hero-highlights">
+            <li>Ensembled CNN predictions across up to 4 images</li>
+            <li>Embedded disease library powers context-tuned answers</li>
+            <li>Agentic chat with optional reasoning drawer and voice</li>
+        </ul>
+        <div class="hero-links">
+            <a class="secondary-link" href="{{ url_for('learn_page') }}">View supported diseases</a>
+        </div>
+    </div>
+    <div class="hero-cta">
+        <div class="hero-badge">Beta</div>
+        <p class="hero-cta-text">Add up to four clear photos of the affected leaf to begin.</p>
+        <button class="primary" id="chooseImagesBtn" type="button">Choose leaf images</button>
+        <p class="muted">Accepted formats: JPG, PNG. Max 10MB each.</p>
+    </div>
+</section>
+
+<section class="chat-layout">
+    <div class="chat-panel">
+        <header class="chat-header">
+            <div>
+                <p class="eyebrow">Conversation</p>
+                <h2>Plant Care Copilot</h2>
+            </div>
+            <div class="status-group">
+                <span class="status-dot online">CNN ready</span>
+                <span class="status-dot secondary">Embeddings loaded</span>
+                <span class="status-dot secondary">TinyLlama if installed</span>
+            </div>
+        </header>
+        <div class="chat-stream" id="chatStream" aria-live="polite"></div>
+        <div class="composer-card">
+            <input type="file" name="images" id="imageInput" accept="image/*" hidden multiple />
+            <div class="upload-row">
+                <div>
+                    <p class="eyebrow">Leaf images</p>
+                    <p class="muted">Use multiple angles to improve confidence.</p>
+                </div>
+                <div class="upload-actions">
+                    <button type="button" class="secondary" id="addImagesBtn">Add images</button>
+                    <button type="button" class="primary" id="predictBtn">Run diagnosis</button>
+                </div>
+            </div>
+            <label for="noteField" class="muted">Add brief notes (symptoms, crop stage, location) to refine results with embeddings.</label>
+            <textarea
+                id="noteField"
+                name="note"
+                rows="2"
+                placeholder="e.g. Yellow spots underside, humid greenhouse, early fruiting stage"
+            ></textarea>
+            <ul class="thumb-list" id="thumbList">
+                <li class="muted">No images selected</li>
+            </ul>
+
+            <div id="advisorPanel" class="advisor-panel hidden">
+                <label for="promptField">Ask about this disease</label>
+                <textarea
+                    id="promptField"
+                    name="prompt"
+                    rows="3"
+                    placeholder="Ask for treatments, supplies, or prevention tips..."
+                ></textarea>
+                <div class="composer-actions">
+                    <div class="composer-toggles">
+                        <label><input type="checkbox" id="thinkingToggle" checked /> Keep reasoning open</label>
+                        <label><input type="checkbox" id="speakToggle" /> Read replies aloud</label>
+                        <button type="button" class="ghost" id="voiceBtn">Voice input</button>
+                    </div>
+                    <div class="composer-buttons">
+                        <button type="button" class="primary" id="sendBtn">Send</button>
+                    </div>
+                </div>
+                <p class="muted api-hint">
+                    Answers are grounded in the embedded CSV knowledge and generated with TinyLlama when available,
+                    falling back to Hugging Face.
+                </p>
+            </div>
+        </div>
+    </div>
+    <aside class="side-panel">
+        <h3>What changed</h3>
+        <ul class="bullet-list">
+            <li>Multi-image upload with ensemble scoring to lift accuracy.</li>
+            <li>Embedded knowledge base built from your CSV for tuned replies.</li>
+            <li>Agentic responses with an optional reasoning drawer.</li>
+            <li>Voice input and reply playback when the browser supports it.</li>
+        </ul>
+        <h3>Workflow</h3>
+        <ol>
+            <li>Attach up to four clear leaf photos.</li>
+            <li>The CNN model ensembles predictions and surfaces confidence.</li>
+            <li>Ask follow-ups; answers cite the embedded disease context.</li>
+        </ol>
+        <div class="key-card">
+            <p class="eyebrow">Advisor Feature</p>
+            <p>
+                The chat pairs the latest diagnosis with your stored disease data so you can request treatment plans, supply lists,
+                or prevention routines in one place.
+            </p>
+        </div>
+    </aside>
+</section>
+{% endblock body %}
