@@ -1,41 +1,70 @@
 # Leaf Doctor
-Leaf Doctor is a friendly web assistant that spots plant diseases from a leaf photo and walks farmers through the next steps. Everything runs through a single chatbot-style interface, so you can diagnose, read curated tips, and ask questions without jumping between tabs.
 
-## What it can do
-- **Leaf upload + CNN diagnosis** – drop in a photo and the onboard PyTorch model predicts one of 39 diseases with a short overview and prevention checklist.
-- **Advisor chat** – send follow-up questions to a Hugging Face Zephyr model (via your API key) for organic/chemical recommendations, dosages, and cultural practices.
-- **Supplement shortcut** – tap “Get supplement suggestion” to auto-ask the advisor for fertilizers, fungicides, or pesticides.
-- **Learn More page** – browse every supported disease and meet the builders (Nikunj Agarwal & Sahithi Kokkula) with quick LinkedIn links.
-- **Clean storage & Docker** – uploads are deleted after each request, and the repo ships with a Dockerfile + docker-compose for easy container runs.
+A web-based plant disease detection system that identifies diseases from leaf images and provides treatment recommendations through an AI-powered chat interface.
 
-## Quick start
-1. **Install deps**
-   ```bash
-   python -m venv .venv
-   # Windows
-   .venv\Scripts\activate
-   # macOS / Linux
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
-2. **Add your secrets**  
-   Create a `.env` file with `HUGGINGFACE_API_KEY=<your token>`. The key powers the advisor and supplement features.
-3. **Run the app**
-   ```bash
-   python app.py
-   ```
-   Visit `http://127.0.0.1:5000`, upload a leaf image, and start chatting.
+## Features
 
-## Docker option
+**Disease Detection**  
+Upload 1-4 leaf images for CNN-based classification across 39 disease categories. Multi-image uploads use ensemble voting for improved accuracy.
+
+**Agentic Advisor**  
+An autonomous agent orchestrates the diagnosis pipeline—analyzing intent, planning tool execution, and self-correcting based on confidence thresholds. Supports follow-up questions about treatments, fertilizers, and prevention.
+
+**RAG-Powered Responses**  
+Retrieves relevant context from the disease knowledge base using semantic search (Sentence Transformers), then generates grounded advice via Groq LLM with HuggingFace as fallback.
+
+**Embedding Caching**  
+Embeddings are cached to disk with MD5 validation. The cache auto-regenerates only when the CSV knowledge base changes.
+
+## Quick Start
+
+```bash
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+# Create .env with:
+#   GROQ_API_KEY=your_groq_key
+#   HUGGINGFACE_API_KEY=your_hf_key (optional fallback)
+
+# Run
+python app.py
+```
+
+Open `http://127.0.0.1:5000` and upload a leaf image.
+
+## Docker
+
 ```bash
 docker compose up --build
 ```
-This uses the gunicorn server and mounts `static/uploads` so the app can keep saving temporary files while running in a container.
 
-## Files to know
-- `app.py` – Flask server, CNN inference, advisor endpoints.
-- `templates/` + `static/` – chatbot UI, Learn page, styles, and client JS.
-- `disease_info.csv` – knowledge base used for both predictions and the Learn page.
-- `plant_disease_model_v1.pt` – PyTorch weights (keep in the project root).
+## Project Structure
 
-That’s it—keep the `.env` file private, swap in updated model weights when you retrain, and you’re good to deploy. Happy diagnosing! 🌱
+```
+app.py                  # Flask server, routes, LLM integration
+agent.py                # Agentic orchestrator with self-correction
+CNN.py                  # PyTorch CNN architecture (39 classes)
+disease_info.csv        # Knowledge base (diseases, descriptions, treatments)
+plant_disease_model_v1.pt  # Trained model weights
+templates/              # HTML templates
+static/                 # CSS, JS, uploads
+```
+
+## Tech Stack
+
+- PyTorch CNN for image classification
+- Sentence Transformers for semantic embeddings
+- Groq API (llama-3.3-70b) as primary LLM
+- HuggingFace Inference API (zephyr-7b) as fallback
+- Flask for backend
+
+## Authors
+
+- Nikunj Agarwal – [LinkedIn](https://www.linkedin.com/in/nikunj-agarwal-d4rkm4773r/)
+- Sahithi Kokkula – [LinkedIn](https://www.linkedin.com/in/sahithi-kokkula-iitbhu/)

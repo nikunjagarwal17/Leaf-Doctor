@@ -1,33 +1,54 @@
-# Bytecode / cache
+# Python
 __pycache__/
 *.py[cod]
-*.pyo
-
-# Virtual environments
-.venv/
+*$py.class
+*.so
+.Python
 venv/
+env/
+ENV/
+.venv
+leaf-doctor.pem
+plant_disease_model_v1.pt
+
+# Flask
+instance/
+.webassets-cache
 
 # Environment variables
 .env
-.env.*
-!.env.sample
+.env.local
 
-# OS / editor noise
-.DS_Store
-Thumbs.db
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Model + data artifacts
-*.pt
-*.pth
-*.onnx
-static/uploads/
+# OS
+.DS_Store
+Thumbs.db
+
+# Application specific
+static/uploads/*
 !static/uploads/.gitkeep
+embeddings_cache.pkl
+models/*.pt
+models/*.bin
+models/*.safetensors
+*.pkl
+*.h5
 
 # Logs
 *.log
+logs/
 
-# Temparory + Notes files
-temp_*.md
-*.pem
+# Backups
+backup_*
+*.bak
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

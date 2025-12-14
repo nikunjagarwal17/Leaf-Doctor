@@ -7,7 +7,7 @@
         <h1>All supported plant diseases at a glance</h1>
         <p>
             The onboard CNN can currently recognize {{ total }} crop diseases across fruits, vegetables, and ornamentals.
-            Browse the knowledge base below to understand symptoms, prevention habits, and advisor-ready prompts.
+            Multi-image uploads improve confidence, and the chat advisor grounds responses in these entries using embeddings plus Groq LLM (with HuggingFace as fallback).
         </p>
         <div class="hero-links">
             <a class="secondary-link" href="{{ url_for('home_page') }}" rel="noreferrer">Return to chatbot</a>
