@@ -6,6 +6,9 @@ This repository contains **Leaf Doctor**, a plant disease detection system built
 - A web app in `Leaf-Doctor/` that lets you upload a leaf photo, get a diagnosis, and read simple prevention/treatment tips.
 - A "Learn" page listing all supported diseases in an easy-to-scan format.
 
+## Demo Video
+[Click Here](https://drive.google.com/drive/folders/1n-bz1yA6OYtuKXwdC20qxi7IOBcXMt37?usp=sharing)
+
 ## Quick start (web app)
 
 1. Go to the Flask app folder:
