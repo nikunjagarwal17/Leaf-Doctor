@@ -85,6 +85,90 @@ function createWelcomeMessage() {
     return div;
 }
 
+function showImageModal(imageSrc, title) {
+    // Create modal overlay
+    const modal = document.createElement("div");
+    modal.className = "image-modal";
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        cursor: pointer;
+    `;
+    
+    const content = document.createElement("div");
+    content.style.cssText = `
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-xl);
+    `;
+    
+    const header = document.createElement("div");
+    header.style.cssText = `
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    `;
+    
+    const titleEl = document.createElement("h3");
+    titleEl.textContent = title;
+    titleEl.style.margin = "0";
+    
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = '<i data-lucide="x"></i>';
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 20px;
+        padding: 0;
+    `;
+    
+    header.appendChild(titleEl);
+    header.appendChild(closeBtn);
+    
+    const img = document.createElement("img");
+    img.src = imageSrc;
+    img.style.cssText = `
+        width: 100%;
+        height: auto;
+        max-height: 70vh;
+        object-fit: contain;
+    `;
+    
+    content.appendChild(header);
+    content.appendChild(img);
+    modal.appendChild(content);
+    
+    // Close handlers
+    const closeModal = () => modal.remove();
+    closeBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+    });
+    
+    document.body.appendChild(modal);
+    
+    // Re-initialize lucide icons
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
+
 // ============================================================================
 // THINKING/REASONING DISPLAY
 // ============================================================================
@@ -228,17 +312,54 @@ function renderPredictionCard(payload) {
         </p>
     `;
 
-    // Per-image breakdown
-    if (payload.per_image?.length > 1) {
+    // Per-image breakdown with GradCAM heatmaps
+    if (payload.per_image?.length > 0) {
         const grid = document.createElement("div");
         grid.classList.add("mini-grid");
         payload.per_image.forEach((p) => {
             const chip = document.createElement("div");
             chip.classList.add("mini-chip");
+            
+            let gradcamInfo = "";
+            if (p.gradcam?.success && p.gradcam?.heatmap_base64) {
+                gradcamInfo = ` <span style="font-size:0.75rem;color:var(--accent);">✓ GradCAM</span>`;
+            }
+            
             chip.innerHTML = `
                 <strong>${p.disease}</strong>
-                <span>${(p.confidence * 100).toFixed(1)}% • ${p.file}</span>
+                <span>${(p.confidence * 100).toFixed(1)}% • ${p.file}${gradcamInfo}</span>
             `;
+            
+            // Add heatmap image if available
+            if (p.gradcam?.success && p.gradcam?.heatmap_base64) {
+                const heatmapContainer = document.createElement("div");
+                heatmapContainer.classList.add("heatmap-preview");
+                heatmapContainer.innerHTML = `
+                    <img src="${p.gradcam.heatmap_base64}" alt="GradCAM Heatmap" style="width:100%; border-radius: 8px; margin-top: 8px; cursor:pointer;" />
+                `;
+                
+                // Add click handler to show enlarged version
+                const heatmapImg = heatmapContainer.querySelector("img");
+                heatmapImg.addEventListener("click", () => {
+                    showImageModal(p.gradcam.heatmap_base64, `GradCAM Heatmap - ${p.file}`);
+                });
+                
+                chip.appendChild(heatmapContainer);
+                
+                // Add download button
+                if (p.gradcam?.heatmap_path) {
+                    const downloadBtn = document.createElement("a");
+                    downloadBtn.href = `/download/${p.gradcam.heatmap_path}`;
+                    downloadBtn.classList.add("btn", "btn-secondary", "btn-xs");
+                    downloadBtn.style.fontSize = "0.7rem";
+                    downloadBtn.style.padding = "4px 8px";
+                    downloadBtn.innerHTML = '<i data-lucide="download" style="width:10px;height:10px;display:inline;margin-right:3px;"></i>Heatmap';
+                    downloadBtn.style.marginTop = "6px";
+                    downloadBtn.style.display = "inline-block";
+                    chip.appendChild(downloadBtn);
+                }
+            }
+            
             grid.appendChild(chip);
         });
         card.appendChild(grid);
@@ -496,7 +617,7 @@ async function triggerAdvisor(prompt) {
         if (data.retrieval_quality && !data.retrieval_quality.passed) {
             const qualityNote = document.createElement("p");
             qualityNote.classList.add("quality-warning");
-            qualityNote.innerHTML = `⚠️ ${data.retrieval_quality.issues?.join(", ") || "Low relevance context"}`;
+            qualityNote.innerHTML = `${data.retrieval_quality.issues?.join(", ") || "Low relevance context"}`;
             block.appendChild(qualityNote);
         }
         

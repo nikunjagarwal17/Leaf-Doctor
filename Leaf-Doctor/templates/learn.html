@@ -56,6 +56,104 @@
     </div>
 </section>
 
+<!-- Model Performance Section -->
+{% if benchmark %}
+<section class="performance-section">
+    <div class="section-header">
+        <div class="hero-badge">
+            <i data-lucide="bar-chart-3"></i>
+            <span>Model Performance</span>
+        </div>
+        <h2>Performance Metrics</h2>
+        <p>Our CNN model achieves high accuracy across all plant disease classes</p>
+    </div>
+    
+    {% if benchmark.metrics %}
+    <div class="metrics-grid">
+        <div class="metric-card glass-card">
+            <div class="metric-icon">
+                <i data-lucide="target"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Accuracy</div>
+                <div class="metric-value">{{ "%.2f"|format(benchmark.metrics.accuracy * 100) }}%</div>
+            </div>
+        </div>
+        
+        <div class="metric-card glass-card">
+            <div class="metric-icon">
+                <i data-lucide="trending-up"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Macro F1</div>
+                <div class="metric-value">{{ "%.4f"|format(benchmark.metrics.macro_f1) }}</div>
+            </div>
+        </div>
+        
+        <div class="metric-card glass-card">
+            <div class="metric-icon">
+                <i data-lucide="zap"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Inference Speed</div>
+                <div class="metric-value">{{ benchmark.metrics.inference_latency }}</div>
+            </div>
+        </div>
+        
+        <div class="metric-card glass-card">
+            <div class="metric-icon">
+                <i data-lucide="database"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Test Samples</div>
+                <div class="metric-value">{{ "{:,}".format(benchmark.metrics.test_samples) }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if benchmark.per_class_html %}
+    <div class="per-class-section">
+        <h3>Top Performing Classes</h3>
+        {{ benchmark.per_class_html|safe }}
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<!-- Sample Predictions Section -->
+{% if sample_predictions %}
+<section class="samples-section">
+    <div class="section-header">
+        <div class="hero-badge">
+            <i data-lucide="image"></i>
+            <span>Sample Predictions</span>
+        </div>
+        <h2>Verified Predictions</h2>
+        <p>Examples of high-confidence predictions from our validation dataset</p>
+    </div>
+    
+    <div class="samples-grid">
+        {% for pred in sample_predictions[:12] %}
+        <div class="sample-card glass-card">
+            <div class="sample-image-container">
+                <img 
+                    src="/marked/{{ pred.filename }}" 
+                    alt="{{ pred.label }}"
+                    class="sample-image"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;padding: 2rem; text-align: center; color: var(--text-secondary);&quot;>Image not available</div>'"
+                />
+            </div>
+            <div class="sample-info">
+                <div class="sample-plant">{{ pred.plant }}</div>
+                <div class="sample-disease">{{ pred.disease }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
 <!-- Search and Filter -->
 <section class="filter-section">
     <div class="search-bar glass-card">
@@ -147,7 +245,7 @@
             <p class="team-role">{{ maker.role }}</p>
             <a href="{{ maker.linkedin }}" target="_blank" rel="noreferrer" class="btn btn-secondary btn-sm">
                 <i data-lucide="linkedin"></i>
-                <span>Connect</span>
+                <span>Connect&nbsp;</span>
             </a>
         </div>
         {% endfor %}

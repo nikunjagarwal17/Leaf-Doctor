@@ -296,7 +296,7 @@ async function triggerAdvisor(prompt) {
         if (data.retrieval_quality && !data.retrieval_quality.passed) {
             const qualityNote = document.createElement("p");
             qualityNote.classList.add("quality-warning");
-            qualityNote.innerHTML = `⚠️ Retrieval: ${data.retrieval_quality.issues?.join(", ") || "Low relevance"}`;
+            qualityNote.innerHTML = `Retrieval: ${data.retrieval_quality.issues?.join(", ") || "Low relevance"}`;
             block.appendChild(qualityNote);
         }
         

@@ -1,9 +1,10 @@
 import sys
-
-
 import hashlib
 import os
 import pickle
+import csv
+import io
+import base64
 from pathlib import Path
 from typing import Optional
 
@@ -14,11 +15,13 @@ import torch.nn.functional as F
 import torchvision.transforms.functional as TF
 from PIL import Image
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_file, send_from_directory
 from huggingface_hub import InferenceClient
 from werkzeug.utils import secure_filename
 
 import CNN
+from gradcam import GradCAM, overlay_heatmap_on_image, create_comparison_image
+from benchmark_viz import load_benchmark_from_result_folder
 from agent import AgentOrchestrator, create_agent_tools
 
 
@@ -42,7 +45,7 @@ if not MODEL_PATH.exists():
     else:
         print(f"ERROR: Model file not found at {MODEL_PATH}. Please upload the model to start the app.")
         sys.exit(1)
-        
+
 try:  
     from sentence_transformers import SentenceTransformer
 except Exception:  
@@ -65,12 +68,22 @@ load_dotenv()
 AGENT: AgentOrchestrator = None
 
 BASE_DIR = Path(__file__).parent
+PROJECT_ROOT = BASE_DIR.parent
+MARKED_DIR = PROJECT_ROOT / "Marked"
 UPLOAD_DIR = BASE_DIR / "static" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_UPLOADS = 4
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-disease_info = pd.read_csv(BASE_DIR / "disease_info.csv", encoding="cp1252")
+disease_info = pd.read_csv(
+    BASE_DIR / "disease_info.csv",
+    encoding="cp1252",
+    quoting=csv.QUOTE_ALL,
+    skipinitialspace=True,
+    on_bad_lines="skip"
+)
+# Clean up column names by stripping whitespace
+disease_info.columns = disease_info.columns.str.strip()
 
 
 def trim_text(value: str, max_chars: int = 220) -> str:
@@ -123,6 +136,7 @@ def load_embedder():
 
 def load_cached_faiss_index() -> tuple[list[dict], str] | None:
     """Load FAISS index and document store from cache if CSV hasn't changed."""
+    global FAISS_INDEX
     
     if not EMBEDDINGS_CACHE_FILE.exists() or not FAISS_INDEX_FILE.exists():
         return None
@@ -140,7 +154,7 @@ def load_cached_faiss_index() -> tuple[list[dict], str] | None:
         if isinstance(cache, dict) and cache.get("csv_hash") == get_csv_hash():
             # Load FAISS index
             FAISS_INDEX = faiss.read_index(str(FAISS_INDEX_FILE))
-            print(f"✅ Loaded FAISS index from cache ({FAISS_INDEX.ntotal} vectors)")
+            print(f"Loaded FAISS index from cache ({FAISS_INDEX.ntotal} vectors)")
             return cache["documents"], cache["csv_hash"]
     except Exception as e:
         print(f"FAISS cache load failed: {e}")
@@ -149,6 +163,7 @@ def load_cached_faiss_index() -> tuple[list[dict], str] | None:
 
 def save_faiss_index(documents: list[dict], embeddings_matrix: np.ndarray, csv_hash: str) -> None:
     """Save FAISS index and document store to cache."""
+    global FAISS_INDEX
     
     if faiss is None:
         return
@@ -165,13 +180,14 @@ def save_faiss_index(documents: list[dict], embeddings_matrix: np.ndarray, csv_h
         with open(EMBEDDINGS_CACHE_FILE, "wb") as f:
             pickle.dump(cache, f)
         
-        print(f"✅ Saved FAISS index ({FAISS_INDEX.ntotal} vectors) and document cache")
+        print(f"Saved FAISS index ({FAISS_INDEX.ntotal} vectors) and document cache")
     except Exception as e:
         print(f"FAISS cache save failed: {e}")
 
 
 def build_faiss_index(embedder) -> list[dict]:
     """Build FAISS index from disease information CSV."""
+    global FAISS_INDEX, DOCUMENT_STORE
     
     if embedder is None:
         return []
@@ -180,10 +196,11 @@ def build_faiss_index(embedder) -> list[dict]:
     cached = load_cached_faiss_index()
     if cached:
         DOCUMENT_STORE = cached[0]
+        print(f"FAISS Index: Loaded from cache with {len(DOCUMENT_STORE)} diseases")
         return DOCUMENT_STORE
     
     # Generate fresh embeddings and build FAISS index
-    print("🔨 Building FAISS index (CSV changed or no cache)...")
+    print("Building FAISS index (CSV changed or no cache)...")
     csv_hash = get_csv_hash()
     
     documents: list[dict] = []
@@ -212,13 +229,13 @@ def build_faiss_index(embedder) -> list[dict]:
         # Create FAISS index - using IndexFlatIP for inner product (cosine similarity with normalized vectors)
         FAISS_INDEX = faiss.IndexFlatIP(embedding_dim)
         FAISS_INDEX.add(embeddings_matrix)
-        print(f"✅ Created FAISS index with {FAISS_INDEX.ntotal} vectors (dim={embedding_dim})")
+        print(f"Created FAISS index with {FAISS_INDEX.ntotal} vectors (dim={embedding_dim})")
         
         # Save to cache
         save_faiss_index(documents, embeddings_matrix, csv_hash)
     else:
         # Fallback: store embeddings in documents for in-memory search
-        print("⚠️ FAISS not available, using in-memory fallback")
+        print("FAISS not available, using in-memory fallback")
         for i, doc in enumerate(documents):
             doc["embedding"] = embeddings_list[i]
     
@@ -233,7 +250,7 @@ BUILDERS = [
     },
     {
         "name": "Sahithi Kokkula",
-        "role": "ML Engineer & Product Designer",
+        "role": "Full-stack & ML Engineer",
         "linkedin": "https://www.linkedin.com/in/sahithi-kokkula-iitbhu/",
     },
 ]
@@ -243,12 +260,15 @@ model.load_state_dict(torch.load(BASE_DIR / "plant_disease_model_v1.pt", map_loc
 model.to(DEVICE)
 model.eval()
 
+# Initialize GradCAM for visualization
+GRADCAM = GradCAM(model, target_layer_name="conv_layers")
+
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_MODEL_ID = os.environ.get("GROQ_MODEL_ID", "llama-3.3-70b-versatile")
 GROQ_CLIENT = Groq(api_key=GROQ_API_KEY) if (Groq and GROQ_API_KEY) else None
 
-HF_MODEL_ID = "HuggingFaceH4/zephyr-7b-beta"
+HF_MODEL_ID = os.environ.get("HF_MODEL_ID", "HuggingFaceH4/zephyr-7b-beta")
 HF_API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
 HF_CLIENT = InferenceClient(token=HF_API_KEY) if HF_API_KEY else None
 
@@ -319,8 +339,8 @@ def format_context(context: list[dict]) -> str:
     return "\n".join([f"- {c['text']} (relevance: {c['score']:.2f})" for c in context])
 
 
-def _infer_logits(image_path: Path) -> np.ndarray: #"""Run the CNN on a single image and return logits."""
-    
+def _infer_logits(image_path: Path) -> np.ndarray: 
+    """Run the CNN on a single image and return logits."""
     image = Image.open(image_path).convert("RGB")
     image = image.resize((224, 224))
     input_data = TF.to_tensor(image).unsqueeze(0).to(DEVICE)
@@ -329,8 +349,62 @@ def _infer_logits(image_path: Path) -> np.ndarray: #"""Run the CNN on a single i
     return output.squeeze(0).detach().cpu().numpy()
 
 
-def aggregate_predictions(image_paths: list[Path]) -> dict: # """Ensemble logits across multiple images to boost confidence."""
+def _generate_gradcam_heatmap(image_path: Path, predicted_class: int) -> dict:
+    """
+    Generate GradCAM heatmap for an image and save visualization.
     
+    Returns dict with:
+        - heatmap_path: Path to saved heatmap visualization
+        - comparison_path: Path to side-by-side comparison
+        - heatmap_base64: Base64 encoded heatmap for JSON response
+    """
+    try:
+        # Load and prepare image
+        image = Image.open(image_path).convert("RGB")
+        image = image.resize((224, 224))
+        input_data = TF.to_tensor(image).unsqueeze(0).to(DEVICE)
+        
+        # Generate GradCAM heatmap
+        heatmap = GRADCAM.generate(input_data, target_class=predicted_class, device=DEVICE)
+        
+        # Create overlay image
+        overlay_img, heatmap_path = overlay_heatmap_on_image(
+            image_path,
+            heatmap,
+            output_path=UPLOAD_DIR / f"{image_path.stem}_gradcam.png"
+        )
+        
+        # Create comparison image (original + heatmap side-by-side)
+        comparison_img, comparison_path = create_comparison_image(
+            image_path,
+            heatmap,
+            output_path=UPLOAD_DIR / f"{image_path.stem}_comparison.png"
+        )
+        
+        # Encode heatmap to base64 for JSON response
+        buffered = io.BytesIO()
+        overlay_img.save(buffered, format="PNG")
+        heatmap_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+        return {
+            "heatmap_path": str(heatmap_path.name),
+            "comparison_path": str(comparison_path.name),
+            "heatmap_base64": f"data:image/png;base64,{heatmap_b64}",
+            "success": True
+        }
+    except Exception as e:
+        print(f"GradCAM generation error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "heatmap_path": None,
+            "comparison_path": None,
+            "heatmap_base64": None
+        }
+
+
+def aggregate_predictions(image_paths: list[Path]) -> dict: 
+    """Ensemble logits across multiple images to boost confidence."""
     logits_stack = []
     per_image = []
 
@@ -339,12 +413,17 @@ def aggregate_predictions(image_paths: list[Path]) -> dict: # """Ensemble logits
         probs = F.softmax(torch.tensor(logits), dim=-1).numpy()
         pred_idx = int(np.argmax(logits))
         logits_stack.append(logits)
+        
+        # Generate GradCAM heatmap for this image
+        gradcam_result = _generate_gradcam_heatmap(path, pred_idx)
+        
         per_image.append(
             {
                 "file": path.name,
                 "predicted_idx": pred_idx,
                 "disease": disease_info["disease_name"][pred_idx],
                 "confidence": float(probs[pred_idx]),
+                "gradcam": gradcam_result
             }
         )
 
@@ -612,7 +691,50 @@ def home_page():
 
 @app.route("/learn")
 def learn_page():
-    return render_template("learn.html", diseases=DISEASE_CATALOG, builders=BUILDERS, total=len(DISEASE_CATALOG))
+    # Load benchmark data
+    result_dir = Path(__file__).parent.parent / "Result"
+    benchmark_data = {}
+    if result_dir.exists():
+        try:
+            benchmark_data = load_benchmark_from_result_folder(result_dir)
+        except Exception as e:
+            print(f"Error loading benchmark data: {e}")
+            benchmark_data = {}
+    
+    # Load marked images (predictions with high confidence)
+    marked_dir = Path(__file__).parent.parent / "Marked"
+    marked_images = []
+    if marked_dir.exists():
+        image_extensions = {".png", ".jpg", ".jpeg", ".gif"}
+        image_files = [f for f in marked_dir.iterdir() if f.suffix.lower() in image_extensions]
+        marked_images = sorted([f.name for f in image_files])
+    
+    # Load sample predictions from Marked folder
+    sample_predictions = []
+    for img_name in marked_images[:12]:  # Show first 12 samples
+        # Extract prediction info from filename (format: "01_Raspberry___healthy_100pct.png")
+        parts = img_name.replace("_100pct", "").replace("_80pct", "").rsplit(".", 1)[0].split("_")
+        if len(parts) > 1:
+            # Extract plant and disease
+            plant_disease = "_".join(parts[1:])
+            if "___" in plant_disease:
+                plant, disease = plant_disease.split("___", 1)
+                sample_predictions.append({
+                    "filename": img_name,
+                    "plant": plant.replace("_", " "),
+                    "disease": disease.replace("_", " "),
+                    "label": f"{plant.replace('_', ' ')} - {disease.replace('_', ' ')}"
+                })
+    
+    return render_template(
+        "learn.html",
+        diseases=DISEASE_CATALOG,
+        builders=BUILDERS,
+        total=len(DISEASE_CATALOG),
+        benchmark=benchmark_data,
+        sample_predictions=sample_predictions,
+        marked_images_count=len(marked_images)
+    )
 
 
 @app.route("/predict", methods=["POST"])
@@ -750,6 +872,53 @@ def advisor_route():
         advice = fetch_advice(prompt, disease)
         advice["agentic"] = False
         return jsonify(advice)
+
+
+@app.route("/marked/<filename>", methods=["GET"])
+def marked_image(filename: str):
+    """
+    Serve sample prediction images from Marked folder.
+    Safety: Only allow serving files from the Marked directory.
+    """
+    # Sanitize filename to prevent directory traversal
+    filename = secure_filename(filename)
+    
+    # Only allow image types
+    if not filename or not any(filename.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif"]):
+        return jsonify({"error": "Invalid file type"}), 403
+    
+    # Use send_from_directory for safe serving
+    try:
+        return send_from_directory(str(MARKED_DIR), filename)
+    except Exception as e:
+        return jsonify({"error": "File not found"}), 404
+
+
+@app.route("/download/<filename>", methods=["GET"])
+def download_file(filename: str):
+    """
+    Download generated visualization files (GradCAM heatmaps, comparisons).
+    Safety: Only allow downloading files from the upload directory.
+    """
+    # Sanitize filename to prevent directory traversal
+    filename = secure_filename(filename)
+    file_path = UPLOAD_DIR / filename
+    
+    # Verify file exists and is in the allowed directory
+    if not file_path.exists() or not file_path.is_file():
+        return jsonify({"error": "File not found"}), 404
+    
+    # Verify file is actually in upload directory (prevent path traversal)
+    try:
+        file_path.resolve().relative_to(UPLOAD_DIR.resolve())
+    except ValueError:
+        return jsonify({"error": "Access denied"}), 403
+    
+    # Only allow PNG and JPG downloads
+    if file_path.suffix.lower() not in [".png", ".jpg", ".jpeg"]:
+        return jsonify({"error": "Invalid file type"}), 403
+    
+    return send_file(file_path, mimetype="image/png", as_attachment=True, download_name=filename)
 
 
 if __name__ == "__main__":
